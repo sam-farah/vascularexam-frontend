@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Users, 
   FileQuestion, 
@@ -13,7 +17,10 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  Save,
+  X
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +36,15 @@ const AdminPanel = () => {
   const [pendingQuestions, setPendingQuestions] = useState([]);
   const [users, setUsers] = useState([]);
   const [knowledgeBase, setKnowledgeBase] = useState([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({
+    question_text: '',
+    model_answer: '',
+    topic: '',
+    difficulty: 'medium',
+    grading_criteria: '',
+    max_score: 4
+  });
 
   useEffect(() => {
     fetchDashboardData();
@@ -108,6 +124,49 @@ const AdminPanel = () => {
       }
     } catch (error) {
       console.error('Error fetching knowledge base:', error);
+    }
+  };
+
+  const createQuestion = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/questions/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newQuestion),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Question created successfully',
+        });
+        setShowCreateForm(false);
+        setNewQuestion({
+          question_text: '',
+          model_answer: '',
+          topic: '',
+          difficulty: 'medium',
+          grading_criteria: '',
+          max_score: 4
+        });
+        fetchDashboardData(); // Refresh stats
+      } else {
+        const data = await response.json();
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to create question',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Network error occurred',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -271,59 +330,179 @@ const AdminPanel = () => {
 
           {/* Questions Tab */}
           <TabsContent value="questions">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Questions Review</CardTitle>
-                <CardDescription>
-                  Review and approve user-submitted questions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {pendingQuestions.length > 0 ? (
-                  <div className="space-y-4">
-                    {pendingQuestions.map((question) => (
-                      <div key={question.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-foreground">
-                            {question.question_text}
-                          </h4>
-                          <Badge variant="secondary">{question.topic}</Badge>
+            <div className="space-y-6">
+              {/* Create Question Section */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Question Management</CardTitle>
+                      <CardDescription>
+                        Create new questions and manage existing ones
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      onClick={() => setShowCreateForm(!showCreateForm)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Question
+                    </Button>
+                  </div>
+                </CardHeader>
+                {showCreateForm && (
+                  <CardContent>
+                    <div className="space-y-4 border-t pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="topic">Topic/Category</Label>
+                          <Select 
+                            value={newQuestion.topic} 
+                            onValueChange={(value) => setNewQuestion({...newQuestion, topic: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select topic" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="carotid-disease">Carotid Disease</SelectItem>
+                              <SelectItem value="aortic-aneurysm">Aortic Aneurysm</SelectItem>
+                              <SelectItem value="peripheral-arterial">Peripheral Arterial Disease</SelectItem>
+                              <SelectItem value="venous-disease">Venous Disease</SelectItem>
+                              <SelectItem value="dialysis-access">Dialysis Access</SelectItem>
+                              <SelectItem value="trauma">Vascular Trauma</SelectItem>
+                              <SelectItem value="endovascular">Endovascular Procedures</SelectItem>
+                              <SelectItem value="general">General Vascular Surgery</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Submitted by: {question.created_by_username}
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Model Answer: {question.model_answer}
-                        </p>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => reviewQuestion(question.id, 'approve')}
-                            className="bg-green-600 hover:bg-green-700"
+                        <div className="space-y-2">
+                          <Label htmlFor="difficulty">Difficulty Level</Label>
+                          <Select 
+                            value={newQuestion.difficulty} 
+                            onValueChange={(value) => setNewQuestion({...newQuestion, difficulty: value})}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => reviewQuestion(question.id, 'reject')}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select difficulty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="easy">Easy</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <FileQuestion className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No pending questions</p>
-                  </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="question_text">Question Text</Label>
+                        <Textarea
+                          id="question_text"
+                          placeholder="Enter the exam question (e.g., 'Discuss the management of asymptomatic carotid disease in a patient about to undergo coronary artery bypass grafting')"
+                          value={newQuestion.question_text}
+                          onChange={(e) => setNewQuestion({...newQuestion, question_text: e.target.value})}
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="model_answer">Model Answer</Label>
+                        <Textarea
+                          id="model_answer"
+                          placeholder="Enter the ideal answer/key points that should be covered"
+                          value={newQuestion.model_answer}
+                          onChange={(e) => setNewQuestion({...newQuestion, model_answer: e.target.value})}
+                          rows={5}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="grading_criteria">Grading Criteria</Label>
+                        <Textarea
+                          id="grading_criteria"
+                          placeholder="Enter specific grading criteria (what earns 1, 2, 3, or 4 points)"
+                          value={newQuestion.grading_criteria}
+                          onChange={(e) => setNewQuestion({...newQuestion, grading_criteria: e.target.value})}
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowCreateForm(false)}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={createQuestion}
+                          disabled={!newQuestion.question_text || !newQuestion.model_answer || !newQuestion.topic}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Create Question
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
                 )}
-              </CardContent>
-            </Card>
+              </Card>
+
+              {/* Pending Questions Review */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pending Questions Review</CardTitle>
+                  <CardDescription>
+                    Review and approve user-submitted questions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {pendingQuestions.length > 0 ? (
+                    <div className="space-y-4">
+                      {pendingQuestions.map((question) => (
+                        <div key={question.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-foreground">
+                              {question.question_text}
+                            </h4>
+                            <Badge variant="secondary">{question.topic}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Submitted by: {question.created_by_username}
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Model Answer: {question.model_answer}
+                          </p>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => reviewQuestion(question.id, 'approve')}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => reviewQuestion(question.id, 'reject')}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FileQuestion className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No pending questions</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Users Tab */}
@@ -375,111 +554,5 @@ const AdminPanel = () => {
 
           {/* Knowledge Base Tab */}
           <TabsContent value="knowledge">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Knowledge Base Management</CardTitle>
-                    <CardDescription>
-                      Manage content from Notion database
-                    </CardDescription>
-                  </div>
-                  <Button onClick={syncKnowledgeBase} disabled={loading}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync from Notion
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {knowledgeBase.length > 0 ? (
-                  <div className="space-y-4">
-                    {knowledgeBase.slice(0, 10).map((entry) => (
-                      <div key={entry.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-foreground">{entry.title}</h4>
-                          <Badge variant="outline">{entry.topic}</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {entry.content?.substring(0, 200)}...
-                        </p>
-                        <div className="flex justify-between items-center text-xs text-muted-foreground">
-                          <span>Updated: {new Date(entry.updated_at).toLocaleDateString()}</span>
-                          <Badge variant={entry.is_active ? 'default' : 'secondary'}>
-                            {entry.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No knowledge base entries</p>
-                    <Button onClick={syncKnowledgeBase} className="mt-4">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Sync from Notion
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Analytics</CardTitle>
-                <CardDescription>
-                  Usage statistics and performance metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">User Statistics</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Active Users:</span>
-                        <span className="text-sm font-medium">
-                          {dashboardData.stats.users?.active || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Premium Users:</span>
-                        <span className="text-sm font-medium">
-                          {dashboardData.stats.users?.premium || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Exam Statistics</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Total Exams:</span>
-                        <span className="text-sm font-medium">
-                          {dashboardData.stats.exams?.total || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Completed:</span>
-                        <span className="text-sm font-medium">
-                          {dashboardData.stats.exams?.completed || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-};
-
-export default AdminPanel;
+            <Car
 
