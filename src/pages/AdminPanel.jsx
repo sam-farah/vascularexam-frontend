@@ -8,59 +8,59 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Users, 
-  FileQuestion, 
-  BookOpen, 
-  BarChart3, 
-  Settings,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  AlertTriangle,
-  Plus,
-  Save,
-  X
+import {
+Users,
+FileQuestion,
+BookOpen,
+BarChart3,
+Settings,
+CheckCircle,
+XCircle,
+RefreshCw,
+AlertTriangle,
+Plus,
+Save,
+X
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminPanel = () => {
-  const { token, API_BASE_URL } = useAuth();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    stats: {},
-    recent_activity: {}
-  });
-  const [pendingQuestions, setPendingQuestions] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [knowledgeBase, setKnowledgeBase] = useState([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newQuestion, setNewQuestion] = useState({
-    question_text: '',
-    model_answer: '',
-    topic: '',
-    difficulty: 'medium',
-    grading_criteria: '',
-    max_score: 4
-  });
+const { token, API_BASE_URL } = useAuth();
+const { toast } = useToast();
+const [loading, setLoading] = useState(true);
+const [dashboardData, setDashboardData] = useState({
+stats: {},
+recent_activity: {}
+});
+const [pendingQuestions, setPendingQuestions] = useState([]);
+const [users, setUsers] = useState([]);
+const [knowledgeBase, setKnowledgeBase] = useState([]);
+const [showCreateForm, setShowCreateForm] = useState(false);
+const [newQuestion, setNewQuestion] = useState({
+question_text: '',
+model_answer: '',
+topic: '',
+difficulty: 'medium',
+grading_criteria: '',
+max_score: 4
+});
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchPendingQuestions();
-    fetchUsers();
-    fetchKnowledgeBase();
-  }, []);
+useEffect(() => {
+fetchDashboardData();
+fetchPendingQuestions();
+fetchUsers();
+fetchKnowledgeBase();
+}, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+const fetchDashboardData = async () => {
+try {
+const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+headers: {
+'Authorization': `Bearer ${token}`,
+'Content-Type': 'application/json',
+},
+});
 
       if (response.ok) {
         const data = await response.json();
@@ -493,66 +493,64 @@ const AdminPanel = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FileQuestion className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No pending questions</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+</div>
+) : (
+<div className="text-center py-8">
+<FileQuestion className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+<p className="text-muted-foreground">No pending questions</p>
+</div>
+)}
+</CardContent>
+</Card>
+</div>
+</TabsContent>
 
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage user accounts and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {users.length > 0 ? (
-                  <div className="space-y-4">
-                    {users.slice(0, 10).map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium text-foreground">
-                            {user.first_name} {user.last_name}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <div className="flex space-x-2 mt-1">
-                            <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                              {user.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
-                            {user.is_admin && (
-                              <Badge variant="destructive">Admin</Badge>
-                            )}
-                            <Badge variant="outline">
-                              {user.subscription_status || 'Free'}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Joined: {new Date(user.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No users found</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+{/* Users Tab */}
+<TabsContent value="users">
+<Card>
+<CardHeader>
+<CardTitle>User Management</CardTitle>
+<CardDescription>
+Manage user accounts and permissions
+</CardDescription>
+</CardHeader>
+<CardContent>
+{users.length > 0 ? (
+<div className="space-y-4">
+{users.slice(0, 10).map((user) => (
+<div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+<div>
+<h4 className="font-medium text-foreground">
+{user.first_name} {user.last_name}
+</h4>
+<p className="text-sm text-muted-foreground">{user.email}</p>
+<div className="flex space-x-2 mt-1">
+<Badge variant={user.is_active ? 'default' : 'secondary'}>
+{user.is_active ? 'Active' : 'Inactive'}
+</Badge>
+{user.is_admin && (
+<Badge variant="destructive">Admin</Badge>
+)}
+<Badge variant="outline">
+{user.subscription_status || 'Free'}
+</Badge>
+</div>
+</div>
+<div className="text-sm text-muted-foreground">
+Joined: {new Date(user.created_at).toLocaleDateString()}
+</div>
+</div>
+))}
+</div>
+) : (
+<div className="text-center py-8">
+<Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+<p className="text-muted-foreground">No users found</p>
+</div>
+)}
+</CardContent>
+</Card>
+</TabsContent>
 
-          {/* Knowledge Base Tab */}
-          <TabsContent value="knowledge">
-            <Car
-
+{/* Knowledge Base Tab */}
+<TabsContent value="knowledge"><aCCard
